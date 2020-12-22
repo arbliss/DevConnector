@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../../middleware/auth');
-const { check, validationResult } = require('express-validator/check');
+const { check, validationResult } = require('express-validator');
 
 const Profile = require('../../models/Profile');
 const User = require('../../models/User');
+const c = require('config');
 
 // @route  GET api/profile/me
 // @desc   Get current users profile
@@ -69,7 +70,37 @@ async (req, res) => {
         profileFields.skills = skills.split(',').map(skill => skill.trim());
     }
 
-    console.log(skills);
+    // Build social object
+    profileFields.social = {};
+    if (youtube) profileFields.social.youtube = youtube;
+    if (twitter) profileFields.social.twitter = twitter;
+    if (facebook) profileFields.social.facebook = facebook;
+    if (linkedin) profileFields.social.linkedin = linkedin;
+    if (instagram) profileFields.social.instagram = instagram;
+
+    try {
+        let profile = await Profile.findOne({ user: req.user.id })
+
+        if(profile) {
+            // Update
+            profile = await Profile.findOneAndUpdate(
+                { user: req.user.id }, 
+                { $set: profileFields }, 
+                { new: true }
+            );
+
+            return res.json(profile);
+        }
+
+        // Create
+        profile = new Profile(profileFields);
+        await profile.save();
+        res.json(profile);
+
+    } catch(err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
 
     res.send('Hello...');
 });
