@@ -1,3 +1,5 @@
+//jshint esversion:8
+
 const jwt = require('jsonwebtoken');
 const config = require('config');
 
@@ -19,4 +21,4 @@ module.exports = function(req, res, next) {
     } catch(err) {
         res.status(401).json({ msg: 'Token is not valid' });
     }
-}
+};
